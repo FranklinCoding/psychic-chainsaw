@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -55,10 +55,31 @@ class TrainerConfig(BaseModel):
 
 
 DEFAULT_CONFIG_PATH = Path("config/default.yaml")
+PROFILE_DIR = Path("config/profiles")
 
 
-def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> TrainerConfig:
+def _read_yaml(path: Path) -> dict[str, Any]:
+    with path.open("r", encoding="utf-8") as handle:
+        return yaml.safe_load(handle) or {}
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def load_config(path: Path | str = DEFAULT_CONFIG_PATH, profile: str | None = None) -> TrainerConfig:
     config_path = Path(path)
-    with config_path.open("r", encoding="utf-8") as handle:
-        raw = yaml.safe_load(handle) or {}
+    raw = _read_yaml(config_path)
+
+    if profile:
+        profile_path = PROFILE_DIR / f"{profile}.yaml"
+        profile_raw = _read_yaml(profile_path)
+        raw = _deep_merge(raw, profile_raw)
+
     return TrainerConfig.model_validate(raw)

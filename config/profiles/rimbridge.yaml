@@ -1,0 +1,6 @@
+bridge_backend: rimbridge
+training:
+  training_mode: true
+  checkpoint_frequency: 5
+policy:
+  max_colonists: 10

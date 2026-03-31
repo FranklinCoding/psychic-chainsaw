@@ -1,0 +1,6 @@
+bridge_backend: rimapi
+training:
+  training_mode: false
+  evaluation_mode: true
+policy:
+  max_colonists: 8
