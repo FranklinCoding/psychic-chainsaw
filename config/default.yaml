@@ -1,0 +1,31 @@
+bridge_backend: mock
+
+app:
+  log_level: INFO
+  save_logs: true
+
+training:
+  training_mode: true
+  evaluation_mode: false
+  checkpoint_frequency: 10
+  max_run_duration_minutes: 60
+  auto_restart_delay_seconds: 2
+
+policy:
+  max_colonists: 6
+  failure_threshold: 0.7
+  exploration: 0.1
+  learning_rate: 0.001
+  colony_strategy_focus: survival
+  min_food_reserve: 20
+  min_medicine_reserve: 5
+  acceptable_injury_threshold: 0.4
+  combat_stance: balanced
+
+backends:
+  rimapi:
+    base_url: http://127.0.0.1:8000
+    timeout_seconds: 10
+  rimbridge:
+    base_url: http://127.0.0.1:8765
+    timeout_seconds: 10
