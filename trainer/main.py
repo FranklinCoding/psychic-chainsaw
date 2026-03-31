@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -49,8 +50,18 @@ def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
     return stats
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run trainer with a selected configuration profile")
+    parser.add_argument(
+        "--profile",
+        help="Profile name from config/profiles (e.g., mock, rimapi, rimbridge)",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
-    config = load_config()
+    args = parse_args()
+    config = load_config(profile=args.profile)
     stats = run_training_loop(config)
     print(
         f"backend={config.bridge_backend} steps={stats.steps} "
