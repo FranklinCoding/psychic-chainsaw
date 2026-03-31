@@ -55,10 +55,30 @@ class TrainerConfig(BaseModel):
 
 
 DEFAULT_CONFIG_PATH = Path("config/default.yaml")
+PROFILES_DIR = Path("config/profiles")
 
 
-def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> TrainerConfig:
+def _deep_merge(base: dict, overlay: dict) -> dict:
+    merged = dict(base)
+    for key, value in overlay.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def load_config(path: Path | str = DEFAULT_CONFIG_PATH, profile: str | None = None) -> TrainerConfig:
     config_path = Path(path)
     with config_path.open("r", encoding="utf-8") as handle:
         raw = yaml.safe_load(handle) or {}
+
+    if profile is not None:
+        profile_path = PROFILES_DIR / f"{profile}.yaml"
+        if not profile_path.exists():
+            raise FileNotFoundError(f"Profile config not found: {profile_path}")
+        with profile_path.open("r", encoding="utf-8") as handle:
+            profile_raw = yaml.safe_load(handle) or {}
+        raw = _deep_merge(raw, profile_raw)
+
     return TrainerConfig.model_validate(raw)
