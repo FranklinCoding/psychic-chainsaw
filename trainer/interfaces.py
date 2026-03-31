@@ -28,6 +28,27 @@ class EnvironmentAdapter(Protocol):
     def close(self) -> None:
         """Clean up backend resources."""
 
+    def connect(self) -> None:
+        """Open any backend connections needed before a run."""
+
+    def disconnect(self) -> None:
+        """Close any backend connections after a run."""
+
+    def reset_run(self) -> Mapping[str, Any]:
+        """Reset environment state for a new run."""
+
+    def get_observation(self) -> Mapping[str, Any]:
+        """Return latest observation snapshot."""
+
+    def apply_action(self, action: Mapping[str, Any]) -> EnvStepResult:
+        """Apply an action during a run."""
+
+    def is_terminal(self) -> bool:
+        """Whether the current run reached terminal state."""
+
+    def get_terminal_reason(self) -> str:
+        """Machine-readable terminal reason for the current run."""
+
 
 class TrainerPolicy(Protocol):
     """Policy interface to keep trainer independent from backend implementation."""
