@@ -64,6 +64,9 @@ class MockEnvironmentAdapter(BaseEnvironmentAdapter):
         else:
             reward += 0.1
 
+        if self.current_step == 4:
+            self.colonists += 1
+
         if self.food <= 0:
             self._terminal_reason = "food_depleted"
         elif self.colonists <= 0:

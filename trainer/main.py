@@ -40,14 +40,13 @@ def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
 
     stats = LoopStats(terminal_reason="in_progress")
 
-    if hasattr(env, "connect"):
-        env.connect()
-    observation = env.reset_run() if hasattr(env, "reset_run") else env.reset()
+    env.connect()
+    observation = env.reset_run()
 
     try:
         while stats.steps < max_steps:
             action = policy.select_action(observation)
-            step_result = env.apply_action(action) if hasattr(env, "apply_action") else env.step(action)
+            step_result = env.apply_action(action)
 
             stats.steps += 1
             stats.total_reward += step_result.reward
@@ -56,11 +55,10 @@ def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
             stats.final_food = int(observation.get("food", observation.get("food_reserve", 0)))
             stats.final_medicine = int(observation.get("medicine", 0))
 
-            if hasattr(env, "is_terminal"):
-                done = bool(env.is_terminal())
-                stats.terminal_reason = str(env.get_terminal_reason()) if hasattr(env, "get_terminal_reason") else "completed"
+            done = bool(env.is_terminal() or step_result.done)
+            if env.get_terminal_reason() != "unknown":
+                stats.terminal_reason = str(env.get_terminal_reason())
             else:
-                done = bool(step_result.done)
                 stats.terminal_reason = str(step_result.info.get("terminal_reason", "completed"))
 
             if done:

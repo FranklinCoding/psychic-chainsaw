@@ -42,6 +42,8 @@ Mock mode is deterministic and does not require RimWorld to be installed.
 
 ```bash
 python -m trainer.main --profile mock
+# or use the helper script:
+bash codex/actions/run_mock.sh
 ```
 
 The run prints a short summary including:
