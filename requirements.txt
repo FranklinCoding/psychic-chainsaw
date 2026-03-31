@@ -1,0 +1,5 @@
+PyYAML>=6.0
+pydantic>=2.7
+requests>=2.32
+pytest>=8.2
+rich>=13.7
