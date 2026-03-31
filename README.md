@@ -3,10 +3,38 @@ RIMWORLD
 
 # RimWorld Agent
 
-Local-only autonomous RimWorld trainer with switchable backends for RIMAPI and RimBridgeServer.
+Local-only autonomous RimWorld trainer with switchable backends for:
 
-Goals:
-- bridge-agnostic trainer
-- mock backend first
-- real adapters for RIMAPI and RimBridgeServer
-- repeated runs, failure detection, auto-restart, checkpointing
+- RIMAPI
+- RimBridgeServer
+
+## Goals
+
+- keep the trainer bridge-agnostic
+- support both RIMAPI and RimBridgeServer through adapters
+- make mock mode runnable even without RimWorld installed
+- support repeated runs, failure detection, auto-restart, and checkpointing
+- prefer structured game-state bridges over pixel automation
+
+## Initial plan
+
+Version 1 should prioritize:
+- shared trainer architecture
+- mock backend
+- RIMAPI adapter
+- RimBridgeServer adapter
+- config-driven backend switching
+- logging, run summaries, and checkpoint scaffolding
+
+## Backend switching
+
+The active backend should be selected through config, for example:
+
+- `bridge_backend: mock`
+- `bridge_backend: rimapi`
+- `bridge_backend: rimbridge`
+
+## Notes
+
+- This project is local-only and not intended as a hosted product.
+- Generated artifacts should not be committed.
