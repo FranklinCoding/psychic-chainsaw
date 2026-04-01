@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass, field
 from typing import Any
 
 from trainer.config import TrainerConfig, load_config
 from trainer.environment.bridge_factory import create_environment
+from trainer.environment.errors import BackendError
 from trainer.failure_detection import FailureAssessment, FailureDetector
 from trainer.interfaces import TrainerPolicy
 from trainer.schemas import (
@@ -136,8 +138,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    config = load_config(profile=args.profile)
-    stats = run_training_loop(config)
+    try:
+        config = load_config(profile=args.profile)
+        stats = run_training_loop(config)
+    except BackendError as exc:
+        profile_label = args.profile or "default"
+        print(f"profile={profile_label} backend_error={exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
     print(
         f"backend={stats.backend} steps={stats.steps} total_reward={stats.total_reward:.2f} "
         f"completed={stats.completed} terminal_reason={stats.terminal_reason} "

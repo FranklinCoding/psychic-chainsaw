@@ -4,3 +4,10 @@ training:
   evaluation_mode: true
 policy:
   max_colonists: 8
+backends:
+  rimapi:
+    base_url: http://127.0.0.1:8765
+    timeout_seconds: 10
+    map_id: 0
+    prefer_v2_colonists: true
+    start_new_game_on_reset: false

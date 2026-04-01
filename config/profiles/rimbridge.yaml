@@ -4,3 +4,12 @@ training:
   checkpoint_frequency: 5
 policy:
   max_colonists: 10
+backends:
+  rimbridge:
+    host: 127.0.0.1
+    port:
+    token:
+    config_path: "%APPDATA%\\gabp\\bridge.json"
+    transport: auto
+    timeout_seconds: 10
+    bridge_version: psychic-chainsaw/0.1.0

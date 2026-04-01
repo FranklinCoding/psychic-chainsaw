@@ -152,8 +152,16 @@ class RimBridgeClient:
 
     def _load_runtime_config(self) -> dict[str, Any]:
         config_path = self.settings.expanded_config_path
-        if config_path is None or not config_path.exists():
+        if config_path is None:
             return {}
+        if not config_path.exists():
+            if self.settings.port is not None and self.settings.token:
+                return {}
+            raise BackendConnectionError(
+                f"RimBridgeServer config file not found at {config_path}. "
+                "Set backends.rimbridge.config_path to a valid GABP bridge.json file "
+                "or configure backends.rimbridge.port and backends.rimbridge.token explicitly."
+            )
         try:
             return json.loads(config_path.read_text(encoding="utf-8"))
         except OSError as exc:
