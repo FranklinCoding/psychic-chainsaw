@@ -60,6 +60,18 @@ class FailureRiskIndicators(SharedModel):
     restart: float = _ratio_field()
 
 
+class BridgeCapabilities(SharedModel):
+    can_set_speed: bool = False
+    can_restart_run: bool = False
+    can_start_new_game: bool = False
+    can_read_colonists: bool = False
+    can_read_resources: bool = False
+    can_set_work_priorities: bool = False
+    can_choose_research: bool = False
+    can_control_alert_posture: bool = False
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class Observation(SharedModel):
     colonist_count: int = Field(ge=0)
     colonist_status_summary: ColonistStatusSummary

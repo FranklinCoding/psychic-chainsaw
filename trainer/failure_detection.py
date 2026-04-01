@@ -88,6 +88,14 @@ class FailureDetector:
     def reset(self) -> None:
         self._progress_samples.clear()
 
+    def _capability_enabled(self, observation: Observation, capability_name: str, default: bool = True) -> bool:
+        capabilities = observation.metadata.get("capabilities")
+        if not isinstance(capabilities, dict):
+            return default
+
+        value = capabilities.get(capability_name)
+        return value if isinstance(value, bool) else default
+
     def assess(self, observation: Observation) -> FailureAssessment:
         progress_value = self._progress_value(observation)
         self._progress_samples.append((observation.step_count, progress_value))
@@ -136,6 +144,16 @@ class FailureDetector:
         )
 
     def _all_colonists_incapacitated_signal(self, observation: Observation) -> FailureSignal:
+        if not self._capability_enabled(observation, "can_read_colonists"):
+            return FailureSignal(
+                code="all_colonists_incapacitated",
+                label="All colonists dead or downed",
+                score=0.0,
+                weight=self.config.failure.weights.all_colonists_incapacitated,
+                active=False,
+                detail="colonist state unavailable for this backend",
+            )
+
         no_colonists_left = observation.colonist_count == 0
         all_downed = observation.colonist_count > 0 and (
             observation.colonist_status_summary.downed >= observation.colonist_count
@@ -154,9 +172,14 @@ class FailureDetector:
         )
 
     def _starvation_signal(self, observation: Observation) -> FailureSignal:
-        food_scarcity = self._reserve_scarcity(observation.food, self.config.policy.min_food_reserve)
+        can_read_resources = self._capability_enabled(observation, "can_read_resources")
+        food_scarcity = self._reserve_scarcity(observation.food, self.config.policy.min_food_reserve) if can_read_resources else 0.0
         score = max(observation.failure_risk.starvation, food_scarcity)
-        detail = f"food={observation.food}, starvation_risk={observation.failure_risk.starvation:.2f}"
+        detail = (
+            f"food={observation.food}, starvation_risk={observation.failure_risk.starvation:.2f}"
+            if can_read_resources
+            else f"food=unavailable, starvation_risk={observation.failure_risk.starvation:.2f}"
+        )
         return FailureSignal(
             code="starvation_collapse",
             label="Starvation or food collapse",
@@ -167,7 +190,12 @@ class FailureDetector:
         )
 
     def _medical_collapse_signal(self, observation: Observation) -> FailureSignal:
-        medicine_scarcity = self._reserve_scarcity(observation.medicine, self.config.policy.min_medicine_reserve)
+        can_read_resources = self._capability_enabled(observation, "can_read_resources")
+        medicine_scarcity = (
+            self._reserve_scarcity(observation.medicine, self.config.policy.min_medicine_reserve)
+            if can_read_resources
+            else 0.0
+        )
         downed_ratio = (
             observation.colonist_status_summary.downed / observation.colonist_count
             if observation.colonist_count > 0
@@ -175,7 +203,8 @@ class FailureDetector:
         )
         score = max(observation.health_risk, medicine_scarcity, downed_ratio)
         detail = (
-            f"health_risk={observation.health_risk:.2f}, medicine={observation.medicine}, "
+            f"health_risk={observation.health_risk:.2f}, "
+            f"medicine={observation.medicine if can_read_resources else 'unavailable'}, "
             f"downed_ratio={downed_ratio:.2f}"
         )
         return FailureSignal(
@@ -251,6 +280,16 @@ class FailureDetector:
         )
 
     def _resource_depletion_signal(self, observation: Observation) -> FailureSignal:
+        if not self._capability_enabled(observation, "can_read_resources"):
+            return FailureSignal(
+                code="severe_resource_depletion",
+                label="Severe resource depletion",
+                score=0.0,
+                weight=self.config.failure.weights.severe_resource_depletion,
+                active=False,
+                detail="resource totals unavailable for this backend",
+            )
+
         food_scarcity = self._reserve_scarcity(observation.food, self.config.policy.min_food_reserve)
         medicine_scarcity = self._reserve_scarcity(observation.medicine, self.config.policy.min_medicine_reserve)
         score = min(food_scarcity, medicine_scarcity)

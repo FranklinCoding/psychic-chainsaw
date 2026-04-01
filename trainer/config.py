@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Literal
+from urllib.parse import urlparse
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -58,13 +60,44 @@ class FailureConfig(BaseModel):
 
 
 class BackendEndpointConfig(BaseModel):
-    base_url: str
     timeout_seconds: int = 10
 
 
+class RimAPIBackendConfig(BackendEndpointConfig):
+    base_url: str = "http://127.0.0.1:8765"
+    map_id: int = Field(default=0, ge=0)
+    prefer_v2_colonists: bool = True
+    start_new_game_on_reset: bool = False
+
+
+class RimBridgeBackendConfig(BackendEndpointConfig):
+    base_url: str | None = None
+    host: str = "127.0.0.1"
+    port: int | None = Field(default=None, ge=1, le=65535)
+    token: str | None = None
+    config_path: str | None = None
+    transport: Literal["auto", "tcp"] = "auto"
+    bridge_version: str = "psychic-chainsaw/0.1.0"
+    launch_id: str | None = None
+
+    @property
+    def expanded_config_path(self) -> Path | None:
+        if not self.config_path:
+            return None
+        expanded = os.path.expanduser(os.path.expandvars(self.config_path))
+        return Path(expanded)
+
+    def resolve_host_port(self) -> tuple[str, int | None]:
+        if self.base_url:
+            parsed = urlparse(self.base_url)
+            if parsed.hostname:
+                return parsed.hostname, parsed.port
+        return self.host, self.port
+
+
 class BackendsConfig(BaseModel):
-    rimapi: BackendEndpointConfig
-    rimbridge: BackendEndpointConfig
+    rimapi: RimAPIBackendConfig
+    rimbridge: RimBridgeBackendConfig
 
 
 class TrainerConfig(BaseModel):

@@ -3,6 +3,7 @@ from __future__ import annotations
 from trainer.environment.base_env import BaseEnvironmentAdapter
 from trainer.interfaces import EnvStepResult
 from trainer.schemas import (
+    BridgeCapabilities,
     ChooseResearchAction,
     ColonistStatusSummary,
     CombatPosture,
@@ -40,6 +41,17 @@ class MockEnvironmentAdapter(BaseEnvironmentAdapter):
         self.max_steps = max_steps
         self.initial_colonist_cap = initial_colonist_cap
         self.connected = False
+        self._capabilities = BridgeCapabilities(
+            can_set_speed=True,
+            can_restart_run=True,
+            can_start_new_game=True,
+            can_read_colonists=True,
+            can_read_resources=True,
+            can_set_work_priorities=True,
+            can_choose_research=True,
+            can_control_alert_posture=True,
+            metadata={"mode": "mock"},
+        )
         self._terminal_reason = "not_started"
         self._work_priorities: dict[str, int] = {}
         self.reset_run()
@@ -159,8 +171,12 @@ class MockEnvironmentAdapter(BaseEnvironmentAdapter):
                 "supports_pause_resume": True,
                 "work_priorities": dict(self._work_priorities),
                 "terminal_reason": self._terminal_reason,
+                "capabilities": self.get_capabilities().model_dump(mode="python"),
             },
         )
+
+    def get_capabilities(self) -> BridgeCapabilities:
+        return self._capabilities
 
     def _apply_food_priority(self, priority: PriorityLevel) -> float:
         self.food_priority = priority

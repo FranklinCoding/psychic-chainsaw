@@ -1,0 +1,67 @@
+{
+  "game_state": {
+    "game_tick": 3600,
+    "colony_wealth": 15432.5,
+    "colonist_count": 3,
+    "storyteller": "Cassandra",
+    "is_paused": false
+  },
+  "colonists": [
+    {
+      "colonist": {
+        "id": 101,
+        "name": "Lumi",
+        "health": 1.0,
+        "mood": 0.82,
+        "hunger": 0.18
+      },
+      "colonist_medical_info": {
+        "in_pain": false,
+        "bleeding_rate": 0.0
+      }
+    },
+    {
+      "colonist": {
+        "id": 102,
+        "name": "Nordi",
+        "health": 0.74,
+        "mood": 0.41,
+        "hunger": 0.44
+      },
+      "colonist_medical_info": {
+        "in_pain": true,
+        "bleeding_rate": 0.05
+      }
+    },
+    {
+      "colonist": {
+        "id": 103,
+        "name": "Casey",
+        "health": 0.18,
+        "mood": 0.22,
+        "hunger": 0.73,
+        "downed": true
+      },
+      "colonist_medical_info": {
+        "in_pain": true,
+        "bleeding_rate": 0.18
+      }
+    }
+  ],
+  "resources_summary": {
+    "total_items": 1234,
+    "total_market_value": 15432.5,
+    "critical_resources": {
+      "food_summary": {
+        "food_total": 48,
+        "total_nutrition": 192.0
+      },
+      "medicine_total": 9
+    }
+  },
+  "research_state": {
+    "current_project": "microelectronics",
+    "progress": 0.46,
+    "completed": false
+  }
+}

@@ -43,8 +43,16 @@ failure:
 
 backends:
   rimapi:
-    base_url: http://127.0.0.1:8000
-    timeout_seconds: 10
-  rimbridge:
     base_url: http://127.0.0.1:8765
     timeout_seconds: 10
+    map_id: 0
+    prefer_v2_colonists: true
+    start_new_game_on_reset: false
+  rimbridge:
+    host: 127.0.0.1
+    port:
+    token:
+    config_path: "%APPDATA%\\gabp\\bridge.json"
+    transport: auto
+    timeout_seconds: 10
+    bridge_version: psychic-chainsaw/0.1.0

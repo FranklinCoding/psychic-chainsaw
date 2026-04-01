@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from trainer.schemas import EnvironmentAction, Observation
+from trainer.schemas import BridgeCapabilities, EnvironmentAction, Observation
 
 @dataclass(slots=True)
 class EnvStepResult:
@@ -40,6 +40,9 @@ class EnvironmentAdapter(Protocol):
 
     def get_observation(self) -> Observation:
         """Return latest observation snapshot."""
+
+    def get_capabilities(self) -> BridgeCapabilities:
+        """Return the currently known backend capability set."""
 
     def apply_action(self, action: EnvironmentAction) -> EnvStepResult:
         """Apply an action during a run."""

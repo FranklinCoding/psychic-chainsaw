@@ -1,0 +1,69 @@
+{
+  "session_info": {
+    "agentId": "rimbridge",
+    "capabilities": {
+      "methods": [
+        "session/hello",
+        "tools/list",
+        "tools/call"
+      ],
+      "events": [],
+      "resources": []
+    }
+  },
+  "tool_descriptors": [
+    {"name": "rimbridge/get_bridge_status"},
+    {"name": "rimbridge/list_capabilities"},
+    {"name": "rimworld/get_game_info"},
+    {"name": "rimworld/list_colonists"},
+    {"name": "rimworld/list_alerts"},
+    {"name": "rimworld/list_messages"},
+    {"name": "rimworld/pause_game"},
+    {"name": "rimworld/set_time_speed"},
+    {"name": "rimworld/start_debug_game"},
+    {"name": "rimworld/go_to_main_menu"}
+  ],
+  "capability_descriptors": [
+    {"id": "rimbridge/get_bridge_status", "aliases": []},
+    {"id": "rimbridge/list_capabilities", "aliases": []},
+    {"id": "rimworld/get_game_info", "aliases": []},
+    {"id": "rimworld/list_colonists", "aliases": []},
+    {"id": "rimworld/list_alerts", "aliases": []},
+    {"id": "rimworld/list_messages", "aliases": []},
+    {"id": "rimworld/pause_game", "aliases": []},
+    {"id": "rimworld/set_time_speed", "aliases": []},
+    {"id": "rimworld/start_debug_game", "aliases": []},
+    {"id": "rimworld/go_to_main_menu", "aliases": []}
+  ],
+  "bridge_status": {
+    "isPaused": true,
+    "tick": 4200,
+    "state": "LoadedGame"
+  },
+  "game_info": {
+    "colonyWealth": 9800.0,
+    "colonistCount": 2,
+    "timeSpeed": "Paused",
+    "tick": 4200
+  },
+  "colonists": [
+    {
+      "id": "pawn-1",
+      "name": "Ari",
+      "status": "healthy"
+    },
+    {
+      "id": "pawn-2",
+      "name": "Vale",
+      "status": "downed"
+    }
+  ],
+  "alerts": [
+    {"label": "Need warm clothes"},
+    {"label": "Colonist needs treatment"},
+    {"label": "Minor break risk"}
+  ],
+  "messages": [
+    {"text": "Raiders are preparing to attack."}
+  ]
+}

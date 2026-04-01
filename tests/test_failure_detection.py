@@ -129,3 +129,30 @@ def test_mock_training_loop_can_terminate_from_failure_detector() -> None:
     assert stats.terminal_reason == "starvation_collapse"
     assert stats.terminal_details["category"] == "failure"
     assert stats.steps < 8
+
+
+def test_failure_detector_ignores_missing_resource_totals_when_backend_cannot_read_resources() -> None:
+    config = load_config(profile="mock")
+    detector = FailureDetector(config)
+
+    observation = build_observation(
+        food=0,
+        medicine=0,
+        failure_risk=FailureRiskIndicators(starvation=0.0, medical=0.05, mood_break=0.05, restart=0.05),
+        metadata={
+            "backend": "partial-test",
+            "capabilities": {
+                "can_read_colonists": True,
+                "can_read_resources": False,
+            },
+        },
+    )
+
+    assessment = detector.assess(observation)
+
+    starvation_signal = next(signal for signal in assessment.signals if signal.code == "starvation_collapse")
+    resource_signal = next(signal for signal in assessment.signals if signal.code == "severe_resource_depletion")
+
+    assert starvation_signal.score == 0.0
+    assert resource_signal.score == 0.0
+    assert assessment.should_terminate is False
