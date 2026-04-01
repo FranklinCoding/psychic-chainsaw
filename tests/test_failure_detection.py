@@ -36,13 +36,12 @@ def build_observation(**overrides: object) -> Observation:
 
 def test_failure_detector_identifies_starvation_collapse() -> None:
     config = load_config(profile="mock")
-    config.policy.failure_threshold = 0.6
     detector = FailureDetector(config)
 
     observation = build_observation(
         food=0,
-        mood_risk=0.35,
-        failure_risk=FailureRiskIndicators(starvation=1.0, medical=0.2, mood_break=0.35, restart=0.85),
+        mood_risk=0.15,
+        failure_risk=FailureRiskIndicators(starvation=1.0, medical=0.2, mood_break=0.15, restart=0.55),
     )
 
     assessment = detector.assess(observation)
@@ -50,6 +49,7 @@ def test_failure_detector_identifies_starvation_collapse() -> None:
     assert assessment.should_terminate is True
     assert assessment.terminal_reason is not None
     assert assessment.terminal_reason.code == "starvation_collapse"
+    assert assessment.total_score < assessment.threshold
 
 
 def test_failure_detector_identifies_all_colonists_incapacitated() -> None:

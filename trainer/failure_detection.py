@@ -111,7 +111,12 @@ class FailureDetector:
         total_score = sum(signal.contribution for signal in signals) / total_weight
         threshold = self.config.policy.failure_threshold
 
-        terminal_reason = self._build_terminal_reason(total_score=total_score, threshold=threshold, signals=signals)
+        terminal_reason = self._build_terminal_reason(
+            observation=observation,
+            total_score=total_score,
+            threshold=threshold,
+            signals=signals,
+        )
         return FailureAssessment(
             total_score=total_score,
             threshold=threshold,
@@ -273,6 +278,7 @@ class FailureDetector:
 
     def _build_terminal_reason(
         self,
+        observation: Observation,
         total_score: float,
         threshold: float,
         signals: list[FailureSignal],
@@ -289,6 +295,18 @@ class FailureDetector:
                 score=total_score,
                 threshold=threshold,
                 primary_signal=immediate_signal.label,
+                contributors=self._contributors(signals),
+            )
+
+        starvation_signal = next((signal for signal in signals if signal.code == "starvation_collapse"), None)
+        if starvation_signal is not None and self._severe_starvation_collapse(observation, starvation_signal):
+            return TerminalReason(
+                category="failure",
+                code=starvation_signal.code,
+                summary="Food reserves are exhausted and starvation risk is severe, so the run is considered lost.",
+                score=total_score,
+                threshold=threshold,
+                primary_signal=starvation_signal.label,
                 contributors=self._contributors(signals),
             )
 
@@ -318,3 +336,10 @@ class FailureDetector:
 
         ranked = sorted(signals, key=lambda signal: (signal.contribution, signal.score), reverse=True)
         return [signal.label for signal in ranked[:3] if signal.score > 0.0]
+
+    def _severe_starvation_collapse(self, observation: Observation, signal: FailureSignal) -> bool:
+        return (
+            observation.food <= 0
+            and observation.failure_risk.starvation >= 0.9
+            and signal.active
+        )
