@@ -54,8 +54,9 @@ class TrainerConfig(BaseModel):
     backends: BackendsConfig
 
 
-DEFAULT_CONFIG_PATH = Path("config/default.yaml")
-PROFILE_DIR = Path("config/profiles")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_CONFIG_PATH = REPO_ROOT / "config/default.yaml"
+PROFILE_DIR = REPO_ROOT / "config/profiles"
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -79,6 +80,8 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH, profile: str | None = No
 
     if profile:
         profile_path = PROFILE_DIR / f"{profile}.yaml"
+        if not profile_path.exists():
+            raise FileNotFoundError(f"Config profile not found: {profile_path}")
         profile_raw = _read_yaml(profile_path)
         raw = _deep_merge(raw, profile_raw)
 

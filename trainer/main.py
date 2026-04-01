@@ -11,6 +11,7 @@ from trainer.interfaces import TrainerPolicy
 
 @dataclass(slots=True)
 class LoopStats:
+    backend: str = "unknown"
     steps: int = 0
     total_reward: float = 0.0
     completed: bool = False
@@ -38,7 +39,7 @@ def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
     env = create_environment(config)
     policy = SimplePolicy()
 
-    stats = LoopStats(terminal_reason="in_progress")
+    stats = LoopStats(backend=env.backend_name, terminal_reason="in_progress")
 
     env.connect()
     observation = env.reset_run()
@@ -84,7 +85,7 @@ def main() -> None:
     config = load_config(profile=args.profile)
     stats = run_training_loop(config)
     print(
-        f"backend={config.bridge_backend} steps={stats.steps} total_reward={stats.total_reward:.2f} "
+        f"backend={stats.backend} steps={stats.steps} total_reward={stats.total_reward:.2f} "
         f"completed={stats.completed} terminal_reason={stats.terminal_reason} "
         f"final_colonists={stats.final_colonists} final_food={stats.final_food} "
         f"final_medicine={stats.final_medicine}"
