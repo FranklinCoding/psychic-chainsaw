@@ -1,3 +1,7 @@
+import os
+
+import pytest
+
 from trainer.config import TrainerConfig, load_config
 
 
@@ -35,3 +39,19 @@ def test_load_rimbridge_profile_merges_with_default() -> None:
     assert config.training.checkpoint_frequency == 5
     assert config.policy.max_colonists == 10
     assert config.training.max_run_duration_minutes == 60
+
+
+def test_load_config_works_outside_repo_cwd(tmp_path) -> None:
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        config = load_config(profile="mock")
+    finally:
+        os.chdir(original_cwd)
+
+    assert config.bridge_backend == "mock"
+
+
+def test_load_config_unknown_profile_raises_clear_error() -> None:
+    with pytest.raises(FileNotFoundError, match="Config profile not found"):
+        load_config(profile="does-not-exist")
