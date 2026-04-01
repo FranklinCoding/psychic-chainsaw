@@ -10,6 +10,8 @@ def test_load_default_config() -> None:
 
     assert isinstance(config, TrainerConfig)
     assert config.bridge_backend == "mock"
+    assert config.failure.progress_window_steps == 4
+    assert config.failure.weights.starvation > 0
     assert config.backends.rimapi.base_url.startswith("http")
     assert config.backends.rimbridge.base_url.startswith("http")
 

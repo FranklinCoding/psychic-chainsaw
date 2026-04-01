@@ -34,6 +34,29 @@ class PolicyConfig(BaseModel):
     combat_stance: str = "balanced"
 
 
+class FailureWeightsConfig(BaseModel):
+    all_colonists_incapacitated: float = Field(default=2.0, ge=0.0)
+    starvation: float = Field(default=1.4, ge=0.0)
+    medical_collapse: float = Field(default=1.2, ge=0.0)
+    mood_collapse: float = Field(default=1.0, ge=0.0)
+    severe_injury_burden: float = Field(default=1.0, ge=0.0)
+    stalled_progress: float = Field(default=0.8, ge=0.0)
+    severe_resource_depletion: float = Field(default=0.8, ge=0.0)
+    high_failure_risk: float = Field(default=1.2, ge=0.0)
+
+
+class FailureConfig(BaseModel):
+    progress_window_steps: int = Field(default=4, ge=2)
+    min_progress_delta: float = Field(default=0.04, ge=0.0, le=1.0)
+    starvation_signal_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
+    medical_signal_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
+    mood_signal_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
+    injury_signal_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
+    resource_signal_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
+    high_risk_signal_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
+    weights: FailureWeightsConfig = Field(default_factory=FailureWeightsConfig)
+
+
 class BackendEndpointConfig(BaseModel):
     base_url: str
     timeout_seconds: int = 10
@@ -51,6 +74,7 @@ class TrainerConfig(BaseModel):
     app: AppConfig = Field(default_factory=AppConfig)
     training: TrainingConfig = Field(default_factory=TrainingConfig)
     policy: PolicyConfig = Field(default_factory=PolicyConfig)
+    failure: FailureConfig = Field(default_factory=FailureConfig)
     backends: BackendsConfig
 
 

@@ -22,6 +22,25 @@ policy:
   acceptable_injury_threshold: 0.4
   combat_stance: balanced
 
+failure:
+  progress_window_steps: 4
+  min_progress_delta: 0.04
+  starvation_signal_threshold: 0.7
+  medical_signal_threshold: 0.75
+  mood_signal_threshold: 0.75
+  injury_signal_threshold: 0.7
+  resource_signal_threshold: 0.7
+  high_risk_signal_threshold: 0.8
+  weights:
+    all_colonists_incapacitated: 2.0
+    starvation: 1.4
+    medical_collapse: 1.2
+    mood_collapse: 1.0
+    severe_injury_burden: 1.0
+    stalled_progress: 0.8
+    severe_resource_depletion: 0.8
+    high_failure_risk: 1.2
+
 backends:
   rimapi:
     base_url: http://127.0.0.1:8000

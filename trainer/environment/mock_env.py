@@ -200,9 +200,7 @@ class MockEnvironmentAdapter(BaseEnvironmentAdapter):
     def _update_terminal_state(self) -> None:
         if self._terminal_reason == "restart_requested":
             return
-        if self.food <= 0:
-            self._terminal_reason = "food_depleted"
-        elif self.current_step >= self.max_steps:
+        if self.current_step >= self.max_steps:
             self._terminal_reason = "max_steps_reached"
         else:
             self._terminal_reason = "in_progress"
