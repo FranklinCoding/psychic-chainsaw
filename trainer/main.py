@@ -2,11 +2,24 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from typing import Any, Mapping
 
 from trainer.config import TrainerConfig, load_config
 from trainer.environment.bridge_factory import create_environment
 from trainer.interfaces import TrainerPolicy
+from trainer.schemas import (
+    ChooseResearchAction,
+    EnvironmentAction,
+    GameSpeed,
+    Observation,
+    PriorityLevel,
+    SetFoodPriorityAction,
+    SetMedicalPriorityAction,
+    SetSpeedAction,
+    SpeedPayload,
+    WaitAction,
+    ResearchChoicePayload,
+    ResourcePriorityPayload,
+)
 
 
 @dataclass(slots=True)
@@ -22,17 +35,18 @@ class LoopStats:
 
 
 class SimplePolicy(TrainerPolicy):
-    """Minimal policy that prefers gathering food when reserves are low."""
+    """Minimal policy that adjusts shared priorities based on typed observations."""
 
-    def select_action(self, observation: Mapping[str, Any]) -> Mapping[str, Any]:
-        food = int(observation.get("food", observation.get("food_reserve", 0)))
-        medicine = int(observation.get("medicine", 0))
-        step = int(observation.get("step", 0))
-        if food < 10:
-            return {"type": "gather_food"}
-        if medicine > 0 and step % 5 == 0:
-            return {"type": "use_medicine"}
-        return {"type": "wait"}
+    def select_action(self, observation: Observation) -> EnvironmentAction:
+        if observation.step_count == 0:
+            return SetSpeedAction(payload=SpeedPayload(speed=GameSpeed.fast))
+        if observation.food < 12:
+            return SetFoodPriorityAction(payload=ResourcePriorityPayload(priority=PriorityLevel.high))
+        if observation.health_risk >= 0.3 and observation.medicine > 0:
+            return SetMedicalPriorityAction(payload=ResourcePriorityPayload(priority=PriorityLevel.high))
+        if observation.step_count == 2 and observation.research_state.current_project != "microelectronics":
+            return ChooseResearchAction(payload=ResearchChoicePayload(project="microelectronics"))
+        return WaitAction()
 
 
 def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
@@ -52,9 +66,9 @@ def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
             stats.steps += 1
             stats.total_reward += step_result.reward
             observation = step_result.observation
-            stats.final_colonists = int(observation.get("colonists", 0))
-            stats.final_food = int(observation.get("food", observation.get("food_reserve", 0)))
-            stats.final_medicine = int(observation.get("medicine", 0))
+            stats.final_colonists = observation.colonist_count
+            stats.final_food = observation.food
+            stats.final_medicine = observation.medicine
 
             done = bool(env.is_terminal() or step_result.done)
             if env.get_terminal_reason() != "unknown":

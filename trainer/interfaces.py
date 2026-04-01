@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 
+from trainer.schemas import EnvironmentAction, Observation
 
 @dataclass(slots=True)
 class EnvStepResult:
     """Represents one environment transition."""
 
-    observation: Mapping[str, Any]
+    observation: Observation
     reward: float
     done: bool
-    info: Mapping[str, Any] = field(default_factory=dict)
+    info: dict[str, Any] = field(default_factory=dict)
 
 
 class EnvironmentAdapter(Protocol):
@@ -19,10 +20,10 @@ class EnvironmentAdapter(Protocol):
 
     backend_name: str
 
-    def reset(self) -> Mapping[str, Any]:
+    def reset(self) -> Observation:
         """Start or restart an episode and return initial observation."""
 
-    def step(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def step(self, action: EnvironmentAction) -> EnvStepResult:
         """Apply action and return transition data."""
 
     def close(self) -> None:
@@ -34,13 +35,13 @@ class EnvironmentAdapter(Protocol):
     def disconnect(self) -> None:
         """Close any backend connections after a run."""
 
-    def reset_run(self) -> Mapping[str, Any]:
+    def reset_run(self) -> Observation:
         """Reset environment state for a new run."""
 
-    def get_observation(self) -> Mapping[str, Any]:
+    def get_observation(self) -> Observation:
         """Return latest observation snapshot."""
 
-    def apply_action(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def apply_action(self, action: EnvironmentAction) -> EnvStepResult:
         """Apply an action during a run."""
 
     def is_terminal(self) -> bool:
@@ -53,5 +54,5 @@ class EnvironmentAdapter(Protocol):
 class TrainerPolicy(Protocol):
     """Policy interface to keep trainer independent from backend implementation."""
 
-    def select_action(self, observation: Mapping[str, Any]) -> Mapping[str, Any]:
+    def select_action(self, observation: Observation) -> EnvironmentAction:
         """Return action for current observation."""

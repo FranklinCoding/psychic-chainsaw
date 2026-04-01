@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
-
 from trainer.interfaces import EnvStepResult
+from trainer.schemas import EnvironmentAction, Observation
 
 
 class BaseEnvironmentAdapter:
@@ -10,10 +9,10 @@ class BaseEnvironmentAdapter:
 
     backend_name = "base"
 
-    def reset(self) -> Mapping[str, Any]:
+    def reset(self) -> Observation:
         raise NotImplementedError
 
-    def step(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def step(self, action: EnvironmentAction) -> EnvStepResult:
         raise NotImplementedError
 
     def connect(self) -> None:
@@ -22,13 +21,13 @@ class BaseEnvironmentAdapter:
     def disconnect(self) -> None:
         return None
 
-    def reset_run(self) -> Mapping[str, Any]:
+    def reset_run(self) -> Observation:
         return self.reset()
 
-    def get_observation(self) -> Mapping[str, Any]:
+    def get_observation(self) -> Observation:
         raise NotImplementedError
 
-    def apply_action(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def apply_action(self, action: EnvironmentAction) -> EnvStepResult:
         return self.step(action)
 
     def is_terminal(self) -> bool:
