@@ -3,7 +3,17 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from trainer.schemas.action import SHARED_ACTION_ADAPTER, SharedAction
-from trainer.schemas.observation import SharedObservation
+from trainer.schemas.observation import (
+    FailureRiskIndicators,
+    ProgressIndicators,
+    ResearchStatus,
+    SharedObservation,
+)
+
+
+def _filter_fields(model_type: type, payload: Mapping[str, Any]) -> dict[str, Any]:
+    allowed = set(model_type.model_fields.keys())
+    return {key: value for key, value in payload.items() if key in allowed}
 
 
 def normalize_observation(payload: Mapping[str, Any] | SharedObservation) -> SharedObservation:
@@ -13,20 +23,18 @@ def normalize_observation(payload: Mapping[str, Any] | SharedObservation) -> Sha
         return payload
 
     mapped = dict(payload)
-    if "step" in mapped and "step_count" not in mapped:
-        mapped["step_count"] = mapped.pop("step")
-    else:
-        mapped.pop("step", None)
-
-    if "colonists" in mapped and "colonist_count" not in mapped:
-        mapped["colonist_count"] = mapped.pop("colonists")
-    else:
-        mapped.pop("colonists", None)
-
-    if "food_reserve" in mapped and "food_reserves" not in mapped:
-        mapped["food_reserves"] = mapped.pop("food_reserve")
-    else:
-        mapped.pop("food_reserve", None)
+    aliases = {
+        "step": "step_count",
+        "colonists": "colonist_count",
+        "food_reserve": "food_reserves",
+        "run_time": "run_time_seconds",
+        "research": "research_status",
+    }
+    for source_key, target_key in aliases.items():
+        if source_key in mapped and target_key not in mapped:
+            mapped[target_key] = mapped.pop(source_key)
+        else:
+            mapped.pop(source_key, None)
 
     defaults: dict[str, Any] = {
         "colonist_count": 0,
@@ -36,6 +44,20 @@ def normalize_observation(payload: Mapping[str, Any] | SharedObservation) -> Sha
     }
     for key, value in defaults.items():
         mapped.setdefault(key, value)
+
+    # Keep schema strict while preserving adapter compatibility by dropping unknown keys.
+    mapped = _filter_fields(SharedObservation, mapped)
+
+    if isinstance(mapped.get("research_status"), Mapping):
+        mapped["research_status"] = _filter_fields(ResearchStatus, mapped["research_status"])
+    if isinstance(mapped.get("progress_indicators"), Mapping):
+        mapped["progress_indicators"] = _filter_fields(
+            ProgressIndicators, mapped["progress_indicators"]
+        )
+    if isinstance(mapped.get("failure_risk_indicators"), Mapping):
+        mapped["failure_risk_indicators"] = _filter_fields(
+            FailureRiskIndicators, mapped["failure_risk_indicators"]
+        )
 
     return SharedObservation.model_validate(mapped)
 

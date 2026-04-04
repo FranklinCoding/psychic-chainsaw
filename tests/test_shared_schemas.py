@@ -25,10 +25,20 @@ def test_observation_model_creation_and_validation() -> None:
         "food_reserve": 12,
         "medicine_reserves": 6,
         "colony_wealth": 800,
+        "run_time": 42.0,
+        "extra_backend_key": "ignored",
+        "research": {
+            "current_research": "microelectronics",
+            "progress": 0.5,
+            "is_active": True,
+            "backend_only": "ignored",
+        },
     })
     assert normalized.step_count == 3
     assert normalized.colonist_count == 4
     assert normalized.food_reserves == 12
+    assert normalized.run_time_seconds == 42.0
+    assert normalized.research_status.current_research == "microelectronics"
 
     with pytest.raises(ValidationError):
         SharedObservation(
@@ -58,6 +68,11 @@ def test_action_model_creation_and_validation() -> None:
                 "action_type": "set_work_priorities",
                 "priorities": {"cook": 7},
             }
+        )
+
+    with pytest.raises(ValidationError):
+        SHARED_ACTION_ADAPTER.validate_python(
+            {"action_type": "choose_research", "research_id": ""}
         )
 
 
