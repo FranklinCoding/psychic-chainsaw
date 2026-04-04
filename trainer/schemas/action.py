@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
 
 GameSpeed = Literal["paused", "normal", "fast", "superfast"]
 CombatPosture = Literal["defensive", "neutral", "aggressive"]
@@ -18,6 +18,16 @@ class SetWorkPrioritiesAction(BaseModel):
     model_config = ConfigDict(extra="forbid")
     action_type: Literal["set_work_priorities"]
     priorities: dict[str, int] = Field(default_factory=dict)
+
+    @field_validator("priorities")
+    @classmethod
+    def validate_priority_levels(cls, priorities: dict[str, int]) -> dict[str, int]:
+        for work_type, level in priorities.items():
+            if level < 0 or level > 4:
+                raise ValueError(
+                    f"Work priority for '{work_type}' must be between 0 and 4 inclusive."
+                )
+        return priorities
 
 
 class ChooseResearchAction(BaseModel):

@@ -3,13 +3,8 @@ from __future__ import annotations
 from trainer.environment.base_env import BaseEnvironmentAdapter
 from trainer.interfaces import EnvStepResult
 from trainer.schemas.action import SharedAction
-from trainer.schemas.normalization import normalize_action
-from trainer.schemas.observation import (
-    FailureRiskIndicators,
-    ProgressIndicators,
-    ResearchStatus,
-    SharedObservation,
-)
+from trainer.schemas.normalization import normalize_action, normalize_observation
+from trainer.schemas.observation import SharedObservation
 
 
 class MockEnvironmentAdapter(BaseEnvironmentAdapter):
@@ -59,28 +54,32 @@ class MockEnvironmentAdapter(BaseEnvironmentAdapter):
         mood_risk = max(0.0, min(1.0, 0.6 - self.food_reserves / 40.0))
         health_risk = max(0.0, min(1.0, 0.5 - self.food_reserves / 50.0))
 
-        return SharedObservation(
-            colonist_count=3,
-            colonist_status_summary="stable",
-            food_reserves=self.food_reserves,
-            medicine_reserves=8.0,
-            colony_wealth=1200.0,
-            mood_risk=mood_risk,
-            health_risk=health_risk,
-            injury_burden=0.1,
-            threat_level=0.2 if self.current_step % 2 == 0 else 0.1,
-            research_status=ResearchStatus(
-                current_research="microelectronics", progress=progress, is_active=True
-            ),
-            run_time_seconds=float(self.current_step * 5),
-            step_count=self.current_step,
-            game_speed=self.game_speed,
-            progress_indicators=ProgressIndicators(
-                episode_progress=progress, objective_progress=min(progress * 0.8, 1.0)
-            ),
-            failure_risk_indicators=FailureRiskIndicators(
-                starvation_risk=max(0.0, min(1.0, 1.0 - self.food_reserves / 30.0)),
-                raid_risk=0.25,
-                mental_break_risk=mood_risk,
-            ),
-        )
+        payload = {
+            "colonists": 3,
+            "colonist_status_summary": "stable",
+            "food_reserve": self.food_reserves,
+            "medicine_reserves": 8.0,
+            "colony_wealth": 1200.0,
+            "mood_risk": mood_risk,
+            "health_risk": health_risk,
+            "injury_burden": 0.1,
+            "threat_level": 0.2 if self.current_step % 2 == 0 else 0.1,
+            "research_status": {
+                "current_research": "microelectronics",
+                "progress": progress,
+                "is_active": True,
+            },
+            "run_time_seconds": float(self.current_step * 5),
+            "step": self.current_step,
+            "game_speed": self.game_speed,
+            "progress_indicators": {
+                "episode_progress": progress,
+                "objective_progress": min(progress * 0.8, 1.0),
+            },
+            "failure_risk_indicators": {
+                "starvation_risk": max(0.0, min(1.0, 1.0 - self.food_reserves / 30.0)),
+                "raid_risk": 0.25,
+                "mental_break_risk": mood_risk,
+            },
+        }
+        return normalize_observation(payload)
