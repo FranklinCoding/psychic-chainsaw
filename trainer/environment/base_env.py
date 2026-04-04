@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
-
-from trainer.interfaces import EnvStepResult
+from trainer.interfaces import EnvStepResult, SharedActionInput
+from trainer.schemas.observation import SharedObservation
 
 
 class BaseEnvironmentAdapter:
@@ -10,10 +9,10 @@ class BaseEnvironmentAdapter:
 
     backend_name = "base"
 
-    def reset(self) -> Mapping[str, Any]:
+    def reset(self) -> SharedObservation:
         raise NotImplementedError
 
-    def step(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def step(self, action: SharedActionInput) -> EnvStepResult:
         raise NotImplementedError
 
     def close(self) -> None:

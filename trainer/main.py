@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping
 
 from trainer.config import TrainerConfig, load_config
 from trainer.environment.bridge_factory import create_environment
 from trainer.interfaces import TrainerPolicy
+from trainer.schemas.action import SetFoodPriorityAction, SetSpeedAction, SharedAction
+from trainer.schemas.observation import SharedObservation
 
 
 @dataclass(slots=True)
@@ -16,12 +17,12 @@ class LoopStats:
 
 
 class SimplePolicy(TrainerPolicy):
-    """Minimal policy that prefers gathering food when reserves are low."""
+    """Minimal policy that prioritizes food stability in mock mode."""
 
-    def select_action(self, observation: Mapping[str, Any]) -> Mapping[str, Any]:
-        if int(observation.get("food_reserve", 0)) < 20:
-            return {"type": "gather_food"}
-        return {"type": "wait"}
+    def select_action(self, observation: SharedObservation) -> SharedAction:
+        if observation.food_reserves < 20:
+            return SetFoodPriorityAction(action_type="set_food_priority", level=4)
+        return SetSpeedAction(action_type="set_speed", speed="normal")
 
 
 def run_training_loop(config: TrainerConfig, max_steps: int = 10) -> LoopStats:
