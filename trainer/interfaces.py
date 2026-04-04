@@ -3,12 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Protocol
 
+from trainer.schemas.action import SharedAction
+from trainer.schemas.observation import SharedObservation
+
 
 @dataclass(slots=True)
 class EnvStepResult:
     """Represents one environment transition."""
 
-    observation: Mapping[str, Any]
+    observation: SharedObservation
     reward: float
     done: bool
     info: Mapping[str, Any] = field(default_factory=dict)
@@ -19,10 +22,10 @@ class EnvironmentAdapter(Protocol):
 
     backend_name: str
 
-    def reset(self) -> Mapping[str, Any]:
+    def reset(self) -> SharedObservation:
         """Start or restart an episode and return initial observation."""
 
-    def step(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def step(self, action: SharedAction) -> EnvStepResult:
         """Apply action and return transition data."""
 
     def close(self) -> None:
@@ -32,5 +35,5 @@ class EnvironmentAdapter(Protocol):
 class TrainerPolicy(Protocol):
     """Policy interface to keep trainer independent from backend implementation."""
 
-    def select_action(self, observation: Mapping[str, Any]) -> Mapping[str, Any]:
+    def select_action(self, observation: SharedObservation) -> SharedAction:
         """Return action for current observation."""

@@ -1,9 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
-
 from trainer.environment.base_env import BaseEnvironmentAdapter
 from trainer.interfaces import EnvStepResult
+from trainer.schemas.action import SharedAction
+from trainer.schemas.normalization import normalize_action
+from trainer.schemas.observation import (
+    FailureRiskIndicators,
+    ProgressIndicators,
+    ResearchStatus,
+    SharedObservation,
+)
 
 
 class MockEnvironmentAdapter(BaseEnvironmentAdapter):
@@ -14,38 +20,67 @@ class MockEnvironmentAdapter(BaseEnvironmentAdapter):
     def __init__(self, max_steps: int = 5) -> None:
         self.max_steps = max_steps
         self.current_step = 0
-        self.food_reserve = 20
+        self.food_reserves = 20.0
+        self.game_speed = "normal"
 
-    def reset(self) -> Mapping[str, Any]:
+    def reset(self) -> SharedObservation:
         self.current_step = 0
-        self.food_reserve = 20
-        return {
-            "step": self.current_step,
-            "food_reserve": self.food_reserve,
-            "colonists": 3,
-            "threat_level": 0.0,
-        }
+        self.food_reserves = 20.0
+        self.game_speed = "normal"
+        return self._make_observation()
 
-    def step(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def step(self, action: SharedAction) -> EnvStepResult:
+        typed_action = normalize_action(action)
         self.current_step += 1
-        action_type = str(action.get("type", "wait"))
 
-        if action_type == "gather_food":
-            self.food_reserve += 2
-            reward = 1.0
-        elif action_type == "consume_food":
-            self.food_reserve -= 3
-            reward = -0.5
-        else:
-            self.food_reserve -= 1
-            reward = 0.1
+        reward = 0.1
+        action_type = typed_action.action_type
 
-        done = self.current_step >= self.max_steps or self.food_reserve <= 0
-        observation = {
-            "step": self.current_step,
-            "food_reserve": self.food_reserve,
-            "colonists": 3,
-            "threat_level": 0.1 if self.current_step % 2 == 0 else 0.0,
-        }
+        if action_type == "set_food_priority":
+            self.food_reserves += 1.5 if typed_action.level >= 3 else -1.0
+            reward = 0.7 if typed_action.level >= 3 else -0.3
+        elif action_type == "set_speed":
+            self.game_speed = typed_action.speed
+        elif action_type == "pause":
+            self.game_speed = "paused"
+        elif action_type == "resume":
+            self.game_speed = "normal"
+        elif action_type == "request_restart":
+            self.current_step = self.max_steps
+
+        self.food_reserves = max(self.food_reserves - 0.5, 0.0)
+        observation = self._make_observation()
+        done = self.current_step >= self.max_steps or self.food_reserves <= 0
         info = {"action_type": action_type, "backend": self.backend_name}
         return EnvStepResult(observation=observation, reward=reward, done=done, info=info)
+
+    def _make_observation(self) -> SharedObservation:
+        progress = min(self.current_step / max(self.max_steps, 1), 1.0)
+        mood_risk = max(0.0, min(1.0, 0.6 - self.food_reserves / 40.0))
+        health_risk = max(0.0, min(1.0, 0.5 - self.food_reserves / 50.0))
+
+        return SharedObservation(
+            colonist_count=3,
+            colonist_status_summary="stable",
+            food_reserves=self.food_reserves,
+            medicine_reserves=8.0,
+            colony_wealth=1200.0,
+            mood_risk=mood_risk,
+            health_risk=health_risk,
+            injury_burden=0.1,
+            threat_level=0.2 if self.current_step % 2 == 0 else 0.1,
+            research_status=ResearchStatus(
+                current_research="microelectronics", progress=progress, is_active=True
+            ),
+            run_time_seconds=float(self.current_step * 5),
+            step_count=self.current_step,
+            game_speed=self.game_speed,
+            progress_indicators=ProgressIndicators(
+                episode_progress=progress, objective_progress=min(progress * 0.8, 1.0)
+            ),
+            failure_risk_indicators=FailureRiskIndicators(
+                starvation_risk=max(0.0, min(1.0, 1.0 - self.food_reserves / 30.0)),
+                raid_risk=0.25,
+                mental_break_risk=mood_risk,
+            ),
+        )
