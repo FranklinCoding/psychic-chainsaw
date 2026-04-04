@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
-
 from trainer.config import BackendEndpointConfig
 from trainer.environment.base_env import BaseEnvironmentAdapter
-from trainer.interfaces import EnvStepResult
+from trainer.interfaces import EnvStepResult, SharedActionInput
+from trainer.schemas.observation import SharedObservation
 
 
 class RimBridgeServerAdapter(BaseEnvironmentAdapter):
@@ -15,8 +14,8 @@ class RimBridgeServerAdapter(BaseEnvironmentAdapter):
     def __init__(self, settings: BackendEndpointConfig) -> None:
         self.settings = settings
 
-    def reset(self) -> Mapping[str, Any]:
+    def reset(self) -> SharedObservation:
         raise NotImplementedError("RimBridgeServer adapter scaffold is not implemented yet.")
 
-    def step(self, action: Mapping[str, Any]) -> EnvStepResult:
+    def step(self, action: SharedActionInput) -> EnvStepResult:
         raise NotImplementedError("RimBridgeServer adapter scaffold is not implemented yet.")
